@@ -56,8 +56,11 @@ foreach ($cat['colors'] as $color_name => $color_data) :
             <span class="discount-pill">توفير 50 درهم</span>
           </div>
 
-          <fieldset class="choice-group">
+          <fieldset class="choice-group" data-attribute="color">
             <legend>اللون <span id="color-value" class="choice-value">غير محدد</span></legend>
+<?php /* Mandat 4P : micro-texte d'erreur discret (style identique aux .field-error
+       du formulaire), affiché au-dessus du bloc et nettoyé dès la sélection. */ ?>
+            <small class="field-error choice-error" data-choice-error="color" role="alert" hidden></small>
             <div class="swatches">
 <?php /* P0-3 : plus aucune couleur présélectionnée — aucune classe
        is-selected ni aria-pressed="true" au chargement. */
@@ -67,8 +70,9 @@ foreach ($cat['colors'] as $color_name => $color_data) : ?>
             </div>
           </fieldset>
 
-          <fieldset class="choice-group size-group">
+          <fieldset class="choice-group size-group" data-attribute="size">
             <legend>المقاس <span id="size-value" class="choice-value">غير محدد</span></legend>
+            <small class="field-error choice-error" data-choice-error="size" role="alert" hidden></small>
             <div class="sizes" role="group" aria-label="اختيار المقاس">
 <?php /* P0-3 : plus aucune taille présélectionnée. */
 foreach ($cat['sizes'] as $size_name) : ?>
@@ -118,7 +122,6 @@ foreach ($cat['sizes'] as $size_name) : ?>
                 <div class="hp-field" aria-hidden="true">
                   <label>Ne pas remplir <input type="text" name="extra_note" tabindex="-1" autocomplete="off" /></label>
                 </div>
-                <p class="attribute-error" id="attribute-error" role="alert" hidden></p>
                 <button class="primary-button form-submit" type="submit">اضغطي هنا للطلب</button>
               </form>
               <div class="form-result" id="form-result" role="status" hidden></div>

@@ -18,9 +18,43 @@ const LANDING = window.LANDING || {};
 const bundlePrices = (LANDING.catalog && LANDING.catalog.bundles) || { 1: 299, 2: 499, 3: 699 };
 const quantityLabels = { 1: "قطعة واحدة", 2: "قطعتان", 3: "3 قطع" };
 let photoRequestId = 0;
-const attributeError = document.querySelector("#attribute-error");
-function clearAttributeError() {
-  if (attributeError) attributeError.hidden = true;
+// Mandat 4P : erreurs ciblées par bloc (couleur / taille). Plus aucun message
+// global près du bouton : le groupe manquant est encadré en rouge avec une
+// micro-secousse, et un petit texte discret (même style que les .field-error
+// du formulaire) apparaît au-dessus du bloc, nettoyé dès la sélection.
+const choiceBlocks = {
+  color: document.querySelector('.choice-group[data-attribute="color"]'),
+  size: document.querySelector('.choice-group[data-attribute="size"]'),
+};
+const choiceErrorSlots = {
+  color: document.querySelector('[data-choice-error="color"]'),
+  size: document.querySelector('[data-choice-error="size"]'),
+};
+const CHOICE_ERROR_MESSAGES = {
+  color: "يرجى اختيار اللون.",
+  size: "يرجى اختيار المقاس.",
+};
+
+function setChoiceError(attribute, hasError) {
+  const slot = choiceErrorSlots[attribute];
+  if (slot) {
+    slot.textContent = hasError ? CHOICE_ERROR_MESSAGES[attribute] : "";
+    slot.hidden = !hasError;
+  }
+  const block = choiceBlocks[attribute];
+  if (block) block.classList.toggle("attribute-error-box", hasError);
+}
+
+function flagChoiceError(attribute) {
+  setChoiceError(attribute, true);
+  // Relance de la micro-secousse à chaque tentative de soumission
+  // (prefers-reduced-motion neutralise l'animation côté CSS).
+  const block = choiceBlocks[attribute];
+  if (block) {
+    block.classList.remove("attribute-error-box");
+    void block.offsetWidth; // reflow : réinitialise l'animation CSS
+    block.classList.add("attribute-error-box");
+  }
 }
 
 function updatePhoto(src, alt) {
@@ -56,7 +90,7 @@ function selectColor(color) {
   });
   updatePhoto(image.src, image.alt);
   document.querySelector("#color-value").textContent = color;
-  clearAttributeError();
+  setChoiceError("color", false);
   updateSummary();
 }
 
@@ -87,7 +121,7 @@ sizeOptions.forEach((option) => {
     state.size = option.dataset.size;
     sizeOptions.forEach((item) => item.classList.toggle("is-selected", item === option));
     document.querySelector("#size-value").textContent = state.size;
-    clearAttributeError();
+    setChoiceError("size", false);
     updateSummary();
   });
 });
@@ -270,20 +304,22 @@ orderForm.addEventListener("submit", async (event) => {
   setFieldError(city, validCity ? "" : "يرجى اختيار المدينة.");
   setFieldError(address, validAddress ? "" : "يرجى إدخال العنوان الكامل.");
 
-  // P0-3 : message d'erreur rouge au-dessus du bouton + défilement
-  // vers le premier groupe manquant (couleur prioritaire sur taille).
+  // Mandat 4P : chaque groupe manquant est signalé indépendamment (contour
+  // rouge + micro-secousse + micro-texte au-dessus du bloc) — plus aucun
+  // message global près du bouton. Si aucun choix n'a été fait, les deux
+  // blocs sont encadrés simultanément ; le défilement va au premier manquant.
   let missingChoice = null;
-  if (!validColor) missingChoice = document.querySelector(".swatches");
-  else if (!validSize) missingChoice = document.querySelector(".sizes");
-  if (missingChoice) {
-    if (attributeError) {
-      attributeError.textContent = !validColor
-        ? "يرجى اختيار لون العباية قبل إتمام الطلب."
-        : "يرجى اختيار المقاس قبل إتمام الطلب.";
-      attributeError.hidden = false;
-    }
+  if (!validColor) {
+    flagChoiceError("color");
+    missingChoice = choiceBlocks.color;
   } else {
-    clearAttributeError();
+    setChoiceError("color", false);
+  }
+  if (!validSize) {
+    flagChoiceError("size");
+    if (!missingChoice) missingChoice = choiceBlocks.size;
+  } else {
+    setChoiceError("size", false);
   }
 
   if (!validName || !moroccanPhone || !validCity || !validAddress || !validColor || !validSize) {

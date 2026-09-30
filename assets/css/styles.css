@@ -1220,6 +1220,25 @@ body { font-family: "Cairo", Tahoma, Arial, sans-serif; font-size: 16px; }
 .hp-field { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap; opacity: 0; pointer-events: none; }
 .form-result.is-error { color: #a63a3a; }
-/* ===== Mandat tunnel checkout (P0-3) : erreur de sélection couleur/taille ===== */
-.attribute-error { color: #a63a3a; font-weight: 700; margin: 0 0 12px; text-align: center; }
-.attribute-error[hidden] { display: none; }
+/* ===== Mandat 4P : ciblage visuel par bloc (couleur/taille) =====
+ * Le groupe manquant est encadré (contour rouge 2px) avec une micro-secousse,
+ * et un micro-texte discret (même style que les .field-error du formulaire)
+ * apparaît au-dessus du bloc. Contour via outline : zéro décalage de mise en
+ * page à l'apparition/disparition. */
+@keyframes abaya-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
+}
+.choice-group.attribute-error-box {
+  outline: 2px solid #e53e3e;
+  outline-offset: 3px;
+  border-radius: 12px;
+  animation: abaya-shake .45s cubic-bezier(.36,.07,.19,.97) both;
+}
+.choice-error { margin: 0 0 7px; }
+.choice-error[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .choice-group.attribute-error-box { animation: none; }
+}
