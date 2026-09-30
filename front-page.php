@@ -2,6 +2,10 @@
 if (!defined('ABSPATH')) exit;
 $u = esc_url(get_template_directory_uri());
 
+/* P0-1 : rendu PHP alimenté par le catalogue unique du thème.
+ * Ordre des couleurs/tailles et grille tarifaire = abaya_catalog() (functions.php). */
+$cat = abaya_catalog();
+
 // Visuel bordeaux de la section « couleurs » : cache-busting automatique.
 // La version = date de modification du fichier : toute mise à jour de l'image
 // change l'URL (?v=...) et force navigateurs / CDN / LiteSpeed à servir
@@ -23,30 +27,21 @@ get_header();
             <button class="gallery-arrow gallery-next" type="button" aria-label="الصورة التالية">›</button>
           </div>
           <div class="thumbnail-row" aria-label="صور العباية">
-            <button class="thumbnail" type="button" data-color="أسود" data-src="<?= $u ?>/uploads/frame_021.webp" data-alt="العباية باللون الأسود" aria-label="عرض اللون الأسود" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/frame_021.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
+<?php /* Boucle vignettes du catalogue (P0-1). La vignette بيج reste
+       is-current car #main-photo affiche ce visuel (élément LCP, src inchangée). */
+foreach ($cat['colors'] as $color_name => $color_data) :
+    $is_lcp   = ($color_name === 'بيج');
+    $full_src = $is_lcp ? abaya_lcp_image_src() : $u . '/' . $color_data['image'];
+    if (!$is_lcp && ($color_name === 'أحمر داكن')) {
+        $full_src .= '?v=' . $visuel_ver; // cache-busting visuel bordeaux (inchangé v1.5)
+    }
+    $color_alt  = 'العباية باللون ' . $color_data['label'];
+    $color_aria = 'عرض اللون ' . $color_data['label'];
+?>
+            <button class="thumbnail<?= $is_lcp ? ' is-current' : '' ?>" type="button" data-color="<?= esc_attr($color_name) ?>" data-src="<?= esc_url($full_src) ?>" data-alt="<?= esc_attr($color_alt) ?>" aria-label="<?= esc_attr($color_aria) ?>" aria-pressed="<?= $is_lcp ? 'true' : 'false' ?>">
+              <img src="<?= $u ?>/<?= esc_attr($color_data['thumb']) ?>" width="151" height="170" loading="lazy" decoding="async" alt="" />
             </button>
-            <button class="thumbnail is-current" type="button" data-color="بيج" data-src="<?php echo esc_url(abaya_lcp_image_src()); ?>" data-alt="العباية باللون البيج" aria-label="عرض اللون البيج" aria-pressed="true">
-              <img src="<?= $u ?>/uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
-            <button class="thumbnail" type="button" data-color="كاكي" data-src="<?= $u ?>/uploads/frame_007.webp" data-alt="العباية باللون الكاكي" aria-label="عرض اللون الكاكي" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/frame_007.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
-            <button class="thumbnail" type="button" data-color="أبيض" data-src="<?= $u ?>/uploads/frame_029-2.webp" data-alt="العباية باللون الأبيض" aria-label="عرض اللون الأبيض" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/frame_029-2.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
-            <button class="thumbnail" type="button" data-color="أزرق داكن" data-src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp" data-alt="العباية باللون الأزرق الداكن" aria-label="عرض اللون الأزرق الداكن" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
-            <button class="thumbnail" type="button" data-color="بني" data-src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp" data-alt="العباية باللون البني" aria-label="عرض اللون البني" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
-            <button class="thumbnail" type="button" data-color="وردي ترابي" data-src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___11_.webp" data-alt="العباية باللون الوردي الترابي" aria-label="عرض اللون الوردي الترابي" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___11_.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
-            <button class="thumbnail" type="button" data-color="عنابي" data-src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp" data-alt="العباية باللون العنابي" aria-label="عرض اللون العنابي" aria-pressed="false">
-              <img src="<?= $u ?>/uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp" width="151" height="170" loading="lazy" decoding="async" alt="" />
-            </button>
+<?php endforeach; ?>
           </div>
         </div>
 
@@ -56,33 +51,29 @@ get_header();
           <p class="product-intro">عباية خريفية أنيقة وانسيابية، بتوب مميز وفينيسيون نقية وخياطة مضوبلة من لداخل ومن برا، بجودة عالية لراحتك في الاستخدام اليومي.</p>
 
           <div class="price-row">
-            <strong id="current-price" class="price">299 <small>درهم</small></strong>
+            <strong id="current-price" class="price"><?= (int) $cat['bundles'][1] ?> <small>درهم</small></strong>
             <del id="old-price" class="old-price">349 درهم</del>
             <span class="discount-pill">توفير 50 درهم</span>
           </div>
 
           <fieldset class="choice-group">
-            <legend>اللون <span id="color-value" class="choice-value">بيج</span></legend>
+            <legend>اللون <span id="color-value" class="choice-value">غير محدد</span></legend>
             <div class="swatches">
-              <button class="swatch" type="button" data-color="أسود" aria-label="أسود" title="أسود" aria-pressed="false"><span style="--swatch-color:#292827"></span></button>
-              <button class="swatch is-selected" type="button" data-color="بيج" aria-label="بيج" title="بيج" aria-pressed="true"><span style="--swatch-color:#d6c5a8"></span></button>
-              <button class="swatch" type="button" data-color="كاكي" aria-label="كاكي" title="كاكي" aria-pressed="false"><span style="--swatch-color:#69765b"></span></button>
-              <button class="swatch" type="button" data-color="أبيض" aria-label="أبيض" title="أبيض" aria-pressed="false"><span style="--swatch-color:#f0eee7"></span></button>
-              <button class="swatch" type="button" data-color="أزرق داكن" aria-label="أزرق داكن" title="أزرق داكن" aria-pressed="false"><span style="--swatch-color:#26384d"></span></button>
-              <button class="swatch" type="button" data-color="بني" aria-label="بني" title="بني" aria-pressed="false"><span style="--swatch-color:#75594e"></span></button>
-              <button class="swatch" type="button" data-color="وردي ترابي" aria-label="وردي ترابي" title="وردي ترابي" aria-pressed="false"><span style="--swatch-color:#b58e91"></span></button>
-              <button class="swatch" type="button" data-color="عنابي" aria-label="عنابي" title="عنابي" aria-pressed="false"><span style="--swatch-color:#792f3c"></span></button>
+<?php /* P0-3 : plus aucune couleur présélectionnée — aucune classe
+       is-selected ni aria-pressed="true" au chargement. */
+foreach ($cat['colors'] as $color_name => $color_data) : ?>
+              <button class="swatch" type="button" data-color="<?= esc_attr($color_name) ?>" aria-label="<?= esc_attr($color_name) ?>" title="<?= esc_attr($color_name) ?>" aria-pressed="false"><span style="--swatch-color:<?= esc_attr($color_data['hex']) ?>"></span></button>
+<?php endforeach; ?>
             </div>
           </fieldset>
 
           <fieldset class="choice-group size-group">
-            <legend>المقاس <span id="size-value" class="choice-value">M</span></legend>
+            <legend>المقاس <span id="size-value" class="choice-value">غير محدد</span></legend>
             <div class="sizes" role="group" aria-label="اختيار المقاس">
-              <button type="button" class="size-option" data-size="S">S</button>
-              <button type="button" class="size-option is-selected" data-size="M">M</button>
-              <button type="button" class="size-option" data-size="L">L</button>
-              <button type="button" class="size-option" data-size="XL">XL</button>
-              <button type="button" class="size-option" data-size="XXL">XXL</button>
+<?php /* P0-3 : plus aucune taille présélectionnée. */
+foreach ($cat['sizes'] as $size_name) : ?>
+              <button type="button" class="size-option" data-size="<?= esc_attr($size_name) ?>"><?= esc_html($size_name) ?></button>
+<?php endforeach; ?>
             </div>
             <button class="text-link size-guide-link" type="button" data-modal="size-guide-dialog" aria-haspopup="dialog" aria-controls="size-guide-dialog">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5 16.5 21l5-5L8 2.5l-5 5Z"/><path d="m12 7 2-2M15 10l2-2m-8 5 2-2m-5 5 2-2"/></svg>
@@ -99,9 +90,9 @@ get_header();
               <div class="order-summary" aria-live="polite">
                 <div class="summary-copy">
                   <span>اختيارك:</span>
-                  <strong id="summary-choice">عباية بيج - مقاس M - قطعة واحدة</strong>
+                  <strong id="summary-choice">اختاري اللون والمقاس - قطعة واحدة</strong>
                 </div>
-                <strong id="summary-price" class="summary-price">299 درهم</strong>
+                <strong id="summary-price" class="summary-price"><?= (int) $cat['bundles'][1] ?> درهم</strong>
               </div>
               <form class="order-form-grid" id="order-form" novalidate>
                 <label class="form-field">
@@ -127,6 +118,7 @@ get_header();
                 <div class="hp-field" aria-hidden="true">
                   <label>Ne pas remplir <input type="text" name="extra_note" tabindex="-1" autocomplete="off" /></label>
                 </div>
+                <p class="attribute-error" id="attribute-error" role="alert" hidden></p>
                 <button class="primary-button form-submit" type="submit">اضغطي هنا للطلب</button>
               </form>
               <div class="form-result" id="form-result" role="status" hidden></div>
@@ -141,28 +133,24 @@ get_header();
           <h2 id="bundles-title">عروض خاصة</h2>
         </div>
         <div class="bundle-grid" role="group" aria-label="اختاري العرض">
-          <button class="bundle-card offer-card is-selected" type="button" data-quantity="1" aria-pressed="true">
-            <span class="bundle-badge">قطعة واحدة</span>
-            <strong class="bundle-price">299 <small>درهم</small></strong>
-            <span class="bundle-saving">توفير 50 درهم</span>
+<?php /* P0-1 : prix, libellés et économies des offres générés depuis
+       la grille autoritaire abaya_catalog() — plus aucune duplication front/serveur. */
+foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
+    $bundle_is_first = ($bundle_qty === 1);
+?>
+          <button class="bundle-card offer-card<?= $bundle_is_first ? ' is-selected' : '' ?>" type="button" data-quantity="<?= (int) $bundle_qty ?>" aria-pressed="<?= $bundle_is_first ? 'true' : 'false' ?>">
+            <span class="bundle-badge"><?= esc_html($cat['bundle_labels'][$bundle_qty]['label']) ?></span>
+            <strong class="bundle-price"><?= (int) $bundle_price ?> <small>درهم</small></strong>
+            <span class="bundle-saving"><?= esc_html($cat['bundle_labels'][$bundle_qty]['saving']) ?></span>
           </button>
-          <button class="bundle-card offer-card" type="button" data-quantity="2" aria-pressed="false">
-            <span class="bundle-badge">قطعتان</span>
-            <strong class="bundle-price">499 <small>درهم</small></strong>
-            <span class="bundle-saving">توفير 99 درهم</span>
-          </button>
-          <button class="bundle-card offer-card" type="button" data-quantity="3" aria-pressed="false">
-            <span class="bundle-badge">3 قطع</span>
-            <strong class="bundle-price">699 <small>درهم</small></strong>
-            <span class="bundle-saving">توفير 198 درهم</span>
-          </button>
+<?php endforeach; ?>
         </div>
       </section>
 
       <section class="visual-section visual-section-colors wrap" aria-labelledby="visual-colors-title">
         <div class="visual-row image-left">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp?v=<?= $visuel_ver ?>" alt="العباية باللون العنابي بقصة واسعة مناسبة للخروج والعمل" loading="lazy" />
+            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp?v=<?= $visuel_ver ?>" alt="العباية باللون الأحمر الداكن بقصة واسعة مناسبة للخروج والعمل" loading="lazy" />
           </figure>
           <div class="visual-copy color-copy">
             <h2 class="visual-title" id="visual-colors-title">لماذا هذه العباية هي الخيار المثالي؟</h2>
