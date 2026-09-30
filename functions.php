@@ -302,6 +302,21 @@ function abaya_render_review_card($comment) {
 
 /* ---------- Route 1 : création de commande WooCommerce (COD) ---------- */
 
+/** Correctif chirurgical (audit 500 staging) : retourne l'ID de l'unique produit
+ * simple publié du catalogue, ou 0 si le repli n'est pas applicable (aucun ou
+ * plusieurs produits publiés — le comportement de production reste inchangé,
+ * car le produit LANDING_PRODUCT_ID y existe et le repli n'est jamais atteint). */
+function abaya_resolve_unique_landing_product() {
+    if (!function_exists('wc_get_products')) return 0;
+    $published = wc_get_products([
+        'status' => 'publish',
+        'type'   => 'simple',
+        'limit'  => 2,
+        'return' => 'ids',
+    ]);
+    return (is_array($published) && count($published) === 1) ? (int) $published[0] : 0;
+}
+
 function abaya_handle_create_order(WP_REST_Request $request) {
     // 1) Champ piège anti-robots (input « extra_note » masqué côté front) : doit rester vide.
     if (trim((string) $request->get_param('website_hp')) !== '') {
@@ -339,7 +354,21 @@ function abaya_handle_create_order(WP_REST_Request $request) {
     $product_id = (int) (defined('LANDING_PRODUCT_ID') ? LANDING_PRODUCT_ID : 15);
     $product    = $product_id > 0 ? wc_get_product($product_id) : false;
     if (!$product || (float) $product->get_price() <= 0) {
-        return new WP_Error('abaya_bad_product', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);
+        /* Correctif chirurgical (audit 500 staging) : LANDING_PRODUCT_ID pointe vers
+         * l'ID produit de la production. Sur un environnement dont la base diffère
+         * (staging : produit réimporté sous un autre ID), le handler renvoyait un
+         * 500 « abaya_bad_product » et le tunnel de vente était bloqué. Repli
+         * strictement borné : si EXACTEMENT UN produit simple est publié, il est
+         * résolu automatiquement ; sinon l'erreur d'origine est conservée. En
+         * production le produit configuré existe : comportement inchangé. */
+        $resolved_id = abaya_resolve_unique_landing_product();
+        if ($resolved_id > 0) {
+            $product_id = $resolved_id;
+            $product    = wc_get_product($product_id);
+        }
+        if (!$product || (float) $product->get_price() <= 0) {
+            return new WP_Error('abaya_bad_product', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);
+        }
     }
     $quantity = max(1, min(3, (int) $request->get_param('quantity')));
 
