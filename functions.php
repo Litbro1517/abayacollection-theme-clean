@@ -51,6 +51,18 @@ add_filter('wp_robots', function ($robots) {
     return $robots;
 });
 
+/* ---------- Page /merci/ : jamais de cache (données personnelles, tunnel checkout) ----------
+ * Les en-têtes no-cache doivent partir AVANT tout rendu : hook template_redirect.
+ * Le hook LiteSpeed force le plugin à servir la page en no-cache ; sinon la page
+ * dynamique risquerait d'être servie depuis le cache LiteSpeed/CDN à un autre
+ * visiteur. Le contournement Cloudflare pour /merci/* reste à créer côté tableau
+ * de bord Cloudflare (règle Cache Bypass) — hors périmètre du thème. */
+add_action('template_redirect', function () {
+    if (!is_page('merci')) return;
+    nocache_headers();
+    do_action('litespeed_control_set_nocache');
+});
+
 /* ---------- Le contenu des pages est du HTML propre : pas de retouche automatique ---------- */
 remove_filter('the_content', 'wpautop');
 remove_filter('the_content', 'wptexturize');
@@ -90,10 +102,54 @@ function abaya_asset_ver($rel) {
  * Plus aucune dépendance Google Fonts : pas de requête externe, pas de WebFontLoader,
  * pas de chaîne HTML -> CSS -> woff2. font-display: swap conservé. */
 
+/* =====================================================================
+ * CATALOGUE UNIQUE DU LANDING (mandat tunnel checkout — P0-1)
+ * Source de vérité unique partagée par :
+ *   - le rendu PHP (vignettes, swatches, cartes d'offre, page /merci/) ;
+ *   - la validation serveur de la route REST (whitelist couleur/taille) ;
+ *   - l'injection JS via window.LANDING (grille tarifaire des bundles).
+ * Toute évolution du catalogue se fait ICI et nulle part ailleurs : c'est la
+ * duplication front/serveur qui avait créé l'écart de prix des offres.
+ *
+ * Nomenclature officielle des 8 couleurs (mandat en vigueur) : la couleur
+ * bordeaux/grenat est nommée « أحمر داكن » ; l'ancien libellé bordeaux est
+ * intégralement retiré du code (catalogue, gabarits et dictionnaires JS).
+ * ===================================================================== */
+function abaya_catalog() {
+    static $catalog = null;
+    if ($catalog !== null) return $catalog;
+
+    $catalog = [
+        /* « label » = forme définie arabe (ال…) utilisée dans les textes d'alt/aria. */
+        'colors' => [
+            'أسود'       => ['hex' => '#292827', 'label' => 'الأسود', 'image' => 'uploads/frame_021.webp', 'thumb' => 'uploads/thumbs/frame_021.webp'],
+            'بيج'        => ['hex' => '#d6c5a8', 'label' => 'البيج', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp'],
+            'كاكي'       => ['hex' => '#69765b', 'label' => 'الكاكي', 'image' => 'uploads/frame_007.webp', 'thumb' => 'uploads/thumbs/frame_007.webp'],
+            'أبيض'       => ['hex' => '#f0eee7', 'label' => 'الأبيض', 'image' => 'uploads/frame_029-2.webp', 'thumb' => 'uploads/thumbs/frame_029-2.webp'],
+            'أزرق داكن'  => ['hex' => '#26384d', 'label' => 'الأزرق الداكن', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp'],
+            'بني'        => ['hex' => '#75594e', 'label' => 'البني', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp'],
+            'وردي ترابي' => ['hex' => '#b58e91', 'label' => 'الوردي الترابي', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___11_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___11_.webp'],
+            'أحمر داكن'  => ['hex' => '#792f3c', 'label' => 'الأحمر الداكن', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp'],
+        ],
+        'sizes'   => ['S', 'M', 'L', 'XL', 'XXL'],
+        /* Grille tarifaire AUTORITAIRE des offres (MAD) — le serveur est la seule
+         * autorité sur le prix d'une commande, le front n'est qu'un affichage. */
+        'bundles' => [1 => 299, 2 => 499, 3 => 699],
+        'bundle_labels' => [
+            1 => ['label' => 'قطعة واحدة', 'saving' => 'توفير 50 درهم'],
+            2 => ['label' => 'قطعتان', 'saving' => 'توفير 99 درهم'],
+            3 => ['label' => '3 قطع', 'saving' => 'توفير 198 درهم'],
+        ],
+    ];
+    return $catalog;
+}
+
 /* Image LCP (#main-photo, robe beige) : URL unique partagée entre le preload
- * (wp_head) et la balise <img>, avec cache-busting filemtime identique. */
+ * (wp_head) et la balise <img>, avec cache-busting filemtime identique.
+ * Le chemin du fichier est désormais défini dans abaya_catalog() (source unique). */
 function abaya_lcp_image_src() {
-    $rel = 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp';
+    $cat = abaya_catalog();
+    $rel = $cat['colors']['بيج']['image'];
     $f   = get_template_directory() . '/' . $rel;
     $ver = file_exists($f) ? filemtime($f) : '1';
     return get_template_directory_uri() . '/' . $rel . '?v=' . $ver;
@@ -144,8 +200,20 @@ add_action('wp_head', function () {
     $endpoint        = wp_make_link_relative(rest_url('landing/v1/create-order'));
     $review_endpoint = wp_make_link_relative(rest_url('landing/v1/submit-review'));
     $thanks          = wp_make_link_relative(home_url('/merci/'));
+    $cat             = abaya_catalog();
     ?>
-<script>window.LANDING = <?php echo wp_json_encode(['endpoint' => $endpoint, 'thanks' => $thanks, 'review_endpoint' => $review_endpoint]); ?>;</script>
+<script>window.LANDING = <?php echo wp_json_encode([
+    'endpoint'        => $endpoint,
+    'thanks'          => $thanks,
+    'review_endpoint' => $review_endpoint,
+    /* P0-1 : la grille tarifaire des bundles est injectée depuis le
+     * catalogue PHP — plus aucune duplication front/serveur possible. */
+    'catalog'         => [
+        'colors'  => array_keys($cat['colors']),
+        'sizes'   => array_values($cat['sizes']),
+        'bundles' => $cat['bundles'],
+    ],
+]); ?>;</script>
 <script type="module" src="<?php echo esc_url($base . '/assets/js/app.js?ver=' . abaya_asset_ver('assets/js/app.js')); ?>"></script>
 <?php if (defined('META_PIXEL_ID') && META_PIXEL_ID) : ?>
 <script>
@@ -237,8 +305,61 @@ add_action('abaya_order_created', function ($order) {
  * débit par IP, revalidation intégrale des champs côté serveur.
  * ===================================================================== */
 
-/** Adresse IP du client : premier IP public de X-Forwarded-For (derrière CDN/proxy), sinon REMOTE_ADDR. */
+/** Plages réseau officielles Cloudflare (source : https://www.cloudflare.com/ips/). */
+function abaya_cloudflare_ranges() {
+    return [
+        // IPv4
+        '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+        '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+        '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+        '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+        // IPv6
+        '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32',
+        '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+    ];
+}
+
+/** Vérifie qu'une IP appartient à une des plages CIDR fournies (IPv4 + IPv6). */
+function abaya_ip_in_ranges($ip, array $ranges) {
+    if (!filter_var($ip, FILTER_VALIDATE_IP)) return false;
+    $ip_bin = @inet_pton($ip);
+    if ($ip_bin === false) return false;
+    foreach ($ranges as $range) {
+        if (strpos($range, '/') === false) continue;
+        list($net, $mask) = explode('/', $range, 2);
+        $net_bin = @inet_pton($net);
+        if ($net_bin === false || strlen($net_bin) !== strlen($ip_bin)) continue;
+        $bits  = (int) $mask;
+        $bytes = (int) floor($bits / 8);
+        $rem   = $bits % 8;
+        if ($bytes > strlen($ip_bin)) continue;
+        if ($bytes > 0 && substr($ip_bin, 0, $bytes) !== substr($net_bin, 0, $bytes)) continue;
+        if ($rem > 0) {
+            $m = (0xFF << (8 - $rem)) & 0xFF;
+            if ((ord($ip_bin[$bytes]) & $m) !== (ord($net_bin[$bytes]) & $m)) continue;
+        }
+        return true;
+    }
+    return false;
+}
+
+/** Adresse IP du client (durcissement P2) :
+ *  - derrière Cloudflare : CF-Connecting-IP, UNIQUEMENT si REMOTE_ADDR appartient
+ *    aux plages officielles CF (l'en-tête est sinon falsifiable par le client) ;
+ *    le X-Forwarded-For n'est plus consulté dans ce cas (forgeable) ;
+ *  - hors Cloudflare : premier IP public de X-Forwarded-For (comportement nginx
+ *    historique conservé), sinon REMOTE_ADDR. */
 function abaya_client_ip() {
+    $remote = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    if ($remote !== '' && abaya_ip_in_ranges($remote, abaya_cloudflare_ranges())) {
+        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            $cf_ip = trim((string) $_SERVER['HTTP_CF_CONNECTING_IP']);
+            if (filter_var($cf_ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return $cf_ip;
+            }
+        }
+        return $remote;
+    }
     if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
         foreach (explode(',', (string) $_SERVER['HTTP_X_FORWARDED_FOR']) as $candidate) {
             $candidate = trim($candidate);
@@ -247,7 +368,25 @@ function abaya_client_ip() {
             }
         }
     }
-    return isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    return $remote;
+}
+
+/** Recherche une commande récente du landing portant le même _abaya_event_id
+ * (P1-2 : idempotence sur retry réseau / double-clic).
+ * La recherche est bornée aux commandes créées dans la fenêtre ($window_seconds)
+ * et au quota réel du limiteur de débit (5 commandes / 10 min par IP) — le balayage
+ * évite toute dépendance à la compatibilité meta_query de wc_get_orders (HPOS/CPT). */
+function abaya_find_recent_order_by_event_id($event_id, $window_seconds) {
+    if (!function_exists('wc_get_orders')) return null;
+    $recent = wc_get_orders([
+        'limit'        => 20,
+        'type'         => 'shop_order',
+        'date_created' => '>=' . (time() - (int) $window_seconds),
+    ]);
+    foreach ($recent as $candidate) {
+        if ((string) $candidate->get_meta('_abaya_event_id') === (string) $event_id) return $candidate;
+    }
+    return null;
 }
 
 /** Limitation de débit simple par IP (transients). Retourne false si le quota ($limit sur $window_seconds) est épuisé. */
@@ -308,12 +447,39 @@ function abaya_handle_create_order(WP_REST_Request $request) {
         return new WP_Error('abaya_spam', 'تم رفض الطلب.', ['status' => 400]);
     }
 
-    // 2) Anti-flood : maximum 5 commandes par tranche de 10 minutes et par IP.
+    // 2) WooCommerce doit être actif : toute la suite dépend de wc_create_order().
+    if (!function_exists('wc_create_order')) {
+        return new WP_Error('abaya_no_woocommerce', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);
+    }
+    $product_id = (int) (defined('LANDING_PRODUCT_ID') ? LANDING_PRODUCT_ID : 15);
+
+    // 3) Idempotence (P1-2) : si une commande du landing a déjà été créée
+    //    avec le même event_id il y a moins de 10 minutes (retry réseau, double-clic),
+    //    la réutiliser et renvoyer la même réponse SANS créer de doublon ni renvoyer
+    //    un second événement Purchase CAPI.
+    $client_event_id = sanitize_text_field((string) $request->get_param('event_id'));
+    if ($client_event_id !== '') {
+        $existing = abaya_find_recent_order_by_event_id($client_event_id, 10 * MINUTE_IN_SECONDS);
+        if ($existing) {
+            return rest_ensure_response([
+                'success'    => true,
+                'order_id'   => $existing->get_id(),
+                'value'      => (float) $existing->get_total(),
+                'event_id'   => $client_event_id,
+                'product_id' => $product_id,
+                'order_key'  => $existing->get_order_key(),
+                'duplicate'  => true,
+            ]);
+        }
+    }
+
+    // 4) Anti-flood : maximum 5 commandes par tranche de 10 minutes et par IP.
+    //    (placé APRÈS l'idempotence : un retry du même event_id ne consomme pas le quota.)
     if (!abaya_rate_limit('order', 5, 10 * MINUTE_IN_SECONDS)) {
         return new WP_Error('abaya_rate_limited', 'عدد كبير من المحاولات. يرجى المحاولة بعد قليل.', ['status' => 429]);
     }
 
-    // 3) Revalidation serveur des champs (mêmes règles que app.js).
+    // 5) Revalidation serveur des champs (mêmes règles que app.js).
     $full_name = sanitize_text_field((string) $request->get_param('full_name'));
     $city      = sanitize_text_field((string) $request->get_param('city'));
     $address   = sanitize_textarea_field((string) $request->get_param('address'));
@@ -332,30 +498,49 @@ function abaya_handle_create_order(WP_REST_Request $request) {
         return new WP_Error('abaya_invalid_field', 'يرجى إدخال العنوان الكامل.', ['status' => 422]);
     }
 
-    // 4) Montant calculé à partir du produit réel (LANDING_PRODUCT_ID = 15), jamais depuis le client.
-    if (!function_exists('wc_create_order')) {
-        return new WP_Error('abaya_no_woocommerce', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);
+    // 6) Whitelist catalogue (P0-2) : la couleur et la taille DOIVENT
+    //    exister dans abaya_catalog(). Route publique : aucune confiance dans le JSON client.
+    $cat   = abaya_catalog();
+    $color = sanitize_text_field((string) $request->get_param('color'));
+    $size  = sanitize_text_field((string) $request->get_param('size'));
+    if (!isset($cat['colors'][$color]) || !in_array($size, $cat['sizes'], true)) {
+        return new WP_Error('abaya_invalid_field', 'يرجى اختيار اللون والمقاس بشكل صحيح.', ['status' => 422]);
     }
-    $product_id = (int) (defined('LANDING_PRODUCT_ID') ? LANDING_PRODUCT_ID : 15);
-    $product    = $product_id > 0 ? wc_get_product($product_id) : false;
-    if (!$product || (float) $product->get_price() <= 0) {
+
+    // 7) Prix AUTORITAIRE du serveur (P0-2) : la grille abaya_catalog() remplace
+    //    l'ancien calcul « prix produit × quantité » qui facturait 598/897 MAD
+    //    pour les offres 2/3 pièces promises à 499/699 MAD.
+    $quantity = max(1, min(3, (int) $request->get_param('quantity')));
+    if (!isset($cat['bundles'][$quantity])) {
+        return new WP_Error('abaya_invalid_field', 'يرجى اختيار العرض المناسب.', ['status' => 422]);
+    }
+    $price = (float) $cat['bundles'][$quantity];
+
+    $product = $product_id > 0 ? wc_get_product($product_id) : false;
+    if (!$product) {
+        // Le prix du produit WC n'est plus consulté : la grille du catalogue fait foi.
         return new WP_Error('abaya_bad_product', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);
     }
-    $quantity = max(1, min(3, (int) $request->get_param('quantity')));
 
-    // 5) event_id de déduplication Pixel/CAPI : celui du navigateur, sinon généré serveur (réutilisé par le Pixel).
-    $event_id = sanitize_text_field((string) $request->get_param('event_id'));
-    if ($event_id === '') {
-        $event_id = 'order_' . time() . '_' . wp_generate_password(8, false, false);
-    }
+    // 8) event_id de déduplication Pixel/CAPI : celui du navigateur, sinon généré serveur (réutilisé par le Pixel).
+    $event_id = $client_event_id !== '' ? $client_event_id : 'order_' . time() . '_' . wp_generate_password(8, false, false);
     $page_url = esc_url_raw((string) $request->get_param('page_url'));
 
-    // 6) Création de la commande WooCommerce officielle, en paiement à la livraison.
+    // 9) Création de la commande WooCommerce officielle, en paiement à la livraison.
     $order = wc_create_order(['status' => 'pending', 'created_via' => 'landing-abaya']);
     if (is_wp_error($order) || !is_object($order)) {
         return new WP_Error('abaya_order_failed', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);
     }
-    $order->add_product($product, $quantity);
+    // Prix pack imposé sur la LIGNE d'article (subtotal + total).
+    $item_id = $order->add_product($product, $quantity, ['subtotal' => $price, 'total' => $price]);
+    $item    = $item_id ? $order->get_item($item_id) : null;
+    if ($item) {
+        // P0-2 : taille et couleur inscrites en clair sur la ligne
+        // d'article (Item Meta), visibles dans l'admin WooCommerce et les e-mails.
+        $item->add_meta_data('اللون', $color, true);
+        $item->add_meta_data('المقاس', $size, true);
+        $item->save();
+    }
 
     $name_parts = preg_split('/\s+/', $full_name, 2);
     $billing    = [
@@ -379,11 +564,24 @@ function abaya_handle_create_order(WP_REST_Request $request) {
     $order->calculate_totals();
     $order->update_status('processing', 'Commande COD créée depuis le formulaire du landing (Abaya Collection).');
 
-    // 7) Persistance des métadonnées marketing (event_id, page_url, utm_*, _fbp/_fbc) et de configuration.
+    // Note de commande lisible par le service client (P0-2).
+    $order->add_order_note(sprintf(
+        'Tunnel landing — اللون : %1$s · المقاس : %2$s · Offre : %3$d pièce(s) — %4$.0f MAD · event_id : %5$s',
+        $color,
+        $size,
+        $quantity,
+        $price,
+        $event_id
+    ));
+
+    // 10) Persistance des métadonnées marketing (event_id, page_url, utm_*, _fbp/_fbc)
+    //    et de configuration. _abaya_color/_abaya_size conservées au niveau commande
+    //    (rétrocompatibilité rapports + page /merci/), les valeurs sont désormais
+    //    validées et également portées par la ligne d'article (Item Meta).
     $order->update_meta_data('_abaya_event_id', $event_id);
     $order->update_meta_data('_abaya_page_url', $page_url);
-    $order->update_meta_data('_abaya_color', sanitize_text_field((string) $request->get_param('color')));
-    $order->update_meta_data('_abaya_size', sanitize_text_field((string) $request->get_param('size')));
+    $order->update_meta_data('_abaya_color', $color);
+    $order->update_meta_data('_abaya_size', $size);
     $order->update_meta_data('_abaya_client_ip', abaya_client_ip());
     foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as $utm_key) {
         $utm_value = sanitize_text_field((string) $request->get_param($utm_key));
@@ -393,7 +591,7 @@ function abaya_handle_create_order(WP_REST_Request $request) {
     if (!empty($_COOKIE['_fbc'])) $order->update_meta_data('_abaya_fbc', sanitize_text_field((string) $_COOKIE['_fbc']));
     $order->save();
 
-    // 8) Déclenche le listener CAPI existant (envoi serveur Purchase, non bloquant, dédupliqué par event_id).
+    // 11) Déclenche le listener CAPI existant (envoi serveur Purchase, non bloquant, dédupliqué par event_id).
     do_action('abaya_order_created', [
         'event_id'   => $event_id,
         'value'      => (float) $order->get_total(),
@@ -407,13 +605,16 @@ function abaya_handle_create_order(WP_REST_Request $request) {
         'order_id'   => $order->get_id(),
     ], $order);
 
-    // 9) Réponse au format exact consommé par app.js — aucune modification front-end requise.
+    // 12) Réponse au format exact consommé par app.js, enrichie de order_key :
+    //     la redirection /merci/?order=ID&key=KEY sécurise l'accès au récapitulatif
+    //     dynamique (page-merci.php) sans exposer de données via un simple ?order=ID.
     return rest_ensure_response([
         'success'    => true,
         'order_id'   => $order->get_id(),
         'value'      => (float) $order->get_total(),
         'event_id'   => $event_id,
         'product_id' => $product_id,
+        'order_key'  => $order->get_order_key(),
     ]);
 }
 

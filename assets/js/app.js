@@ -9,10 +9,19 @@ const colorImages = new Map(
 );
 const sizeOptions = [...document.querySelectorAll(".size-option")];
 const bundleOptions = [...document.querySelectorAll(".bundle-card")];
-const state = { color: "بيج", size: "M", quantity: 1 };
-const bundlePrices = { 1: 299, 2: 499, 3: 699 };
+// P0-3 : plus aucune présélection — la cliente DOIT choisir couleur et taille.
+const state = { color: null, size: null, quantity: 1 };
+// P0-1 : la grille tarifaire des offres vient du serveur
+// (window.LANDING.catalog, injectée depuis abaya_catalog()) — le front n'est
+// qu'un affichage ; repli local identique si l'injection manquerait.
+const LANDING = window.LANDING || {};
+const bundlePrices = (LANDING.catalog && LANDING.catalog.bundles) || { 1: 299, 2: 499, 3: 699 };
 const quantityLabels = { 1: "قطعة واحدة", 2: "قطعتان", 3: "3 قطع" };
 let photoRequestId = 0;
+const attributeError = document.querySelector("#attribute-error");
+function clearAttributeError() {
+  if (attributeError) attributeError.hidden = true;
+}
 
 function updatePhoto(src, alt) {
   const requestId = ++photoRequestId;
@@ -47,14 +56,18 @@ function selectColor(color) {
   });
   updatePhoto(image.src, image.alt);
   document.querySelector("#color-value").textContent = color;
+  clearAttributeError();
   updateSummary();
 }
 
 function updateSummary() {
   const price = bundlePrices[state.quantity];
   const quantityLabel = quantityLabels[state.quantity];
-  document.querySelector("#summary-choice").textContent =
-    `عباية ${state.color} - مقاس ${state.size} - ${quantityLabel}`;
+  // P0-3 : gère l'état « non choisi » (color/size à null).
+  const choiceText = state.color && state.size
+    ? `عباية ${state.color} - مقاس ${state.size} - ${quantityLabel}`
+    : `اختاري اللون والمقاس - ${quantityLabel}`;
+  document.querySelector("#summary-choice").textContent = choiceText;
   document.querySelector("#summary-price").textContent = `${price} درهم`;
   bundleOptions.forEach((option) => {
     const selected = Number(option.dataset.quantity) === state.quantity;
@@ -74,6 +87,7 @@ sizeOptions.forEach((option) => {
     state.size = option.dataset.size;
     sizeOptions.forEach((item) => item.classList.toggle("is-selected", item === option));
     document.querySelector("#size-value").textContent = state.size;
+    clearAttributeError();
     updateSummary();
   });
 });
@@ -208,7 +222,7 @@ orderForm.querySelectorAll(".form-field input, .form-field select").forEach((fie
   field.addEventListener("change", () => setFieldError(field, ""));
 });
 
-const LANDING = window.LANDING || {};
+const LANDING_ENDPOINT = LANDING.endpoint;
 const submitButton = orderForm.querySelector(".form-submit");
 const submitLabel = submitButton.textContent;
 // Un seul event_id par chargement de page : un nouvel essai ne crée jamais de doublon
@@ -247,19 +261,43 @@ orderForm.addEventListener("submit", async (event) => {
   const validName = name.value.trim().length >= 3;
   const validCity = city.value.trim().length >= 2;
   const validAddress = address.value.trim().length >= 4;
+  // P0-3 : couleur et taille obligatoires, aucune valeur par défaut.
+  const validColor = Boolean(state.color);
+  const validSize = Boolean(state.size);
 
   setFieldError(name, validName ? "" : "يرجى إدخال الاسم الكامل.");
   setFieldError(phone, moroccanPhone ? "" : "أدخلي رقم هاتف مغربي صحيحاً.");
   setFieldError(city, validCity ? "" : "يرجى اختيار المدينة.");
   setFieldError(address, validAddress ? "" : "يرجى إدخال العنوان الكامل.");
 
-  if (!validName || !moroccanPhone || !validCity || !validAddress) {
-    const firstInvalid = orderForm.querySelector('[aria-invalid="true"]');
-    firstInvalid?.focus();
+  // P0-3 : message d'erreur rouge au-dessus du bouton + défilement
+  // vers le premier groupe manquant (couleur prioritaire sur taille).
+  let missingChoice = null;
+  if (!validColor) missingChoice = document.querySelector(".swatches");
+  else if (!validSize) missingChoice = document.querySelector(".sizes");
+  if (missingChoice) {
+    if (attributeError) {
+      attributeError.textContent = !validColor
+        ? "يرجى اختيار لون العباية قبل إتمام الطلب."
+        : "يرجى اختيار المقاس قبل إتمام الطلب.";
+      attributeError.hidden = false;
+    }
+  } else {
+    clearAttributeError();
+  }
+
+  if (!validName || !moroccanPhone || !validCity || !validAddress || !validColor || !validSize) {
+    if (missingChoice) {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      missingChoice.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    } else {
+      const firstInvalid = orderForm.querySelector('[aria-invalid="true"]');
+      firstInvalid?.focus();
+    }
     return;
   }
 
-  if (!LANDING.endpoint) {
+  if (!LANDING_ENDPOINT) {
     showFormError("خطأ في الإعداد. يرجى الاتصال بنا هاتفياً.");
     return;
   }
@@ -300,8 +338,17 @@ orderForm.addEventListener("submit", async (event) => {
         content_type: "product",
         content_ids: [String(out.product_id)],
       }, { eventID: out.event_id });
-      // Bouton laissé désactivé : redirection vers la page de remerciement
-      setTimeout(() => { location.href = LANDING.thanks || "/"; }, 500);
+      // Bouton laissé désactivé : redirection vers la page de remerciement.
+      // P1-1 : passage de order_id + order_key pour afficher le
+      // récapitulatif dynamique sécurisé (sans clé valide, /merci/ reste générique).
+      setTimeout(() => {
+        const thanksBase = LANDING.thanks || "/";
+        const sep = thanksBase.includes("?") ? "&" : "?";
+        const orderQuery = out.order_key
+          ? `${sep}order=${encodeURIComponent(out.order_id)}&key=${encodeURIComponent(out.order_key)}`
+          : "";
+        location.href = thanksBase + orderQuery;
+      }, 500);
       return;
     }
     showFormError(out.message || "حدث خطأ، يرجى المحاولة مرة أخرى.");

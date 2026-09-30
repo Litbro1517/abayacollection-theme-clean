@@ -11,6 +11,6 @@ function abaya_pages() {
         'conditions-retour' => ['سياسة الاستبدال والاسترجاع 🔄', 'سياسة الاستبدال والاسترجاع | Abaya Collection', 'سياسة الاستبدال والاسترجاع لدى Abaya Collection.'],
         'politique-confidentialite' => ['سياسة الخصوصية (الخاصة بنطاق Abaya Collection) 🔒', 'سياسة الخصوصية | Abaya Collection', 'سياسة الخصوصية الخاصة بنطاق Abaya Collection.'],
         'contact' => ['اتصل بنا 💬', 'اتصل بنا | Abaya Collection', 'تواصلوا مع فريق Abaya Collection.'],
-        'merci' => ['شكراً لك! تم استلام طلبك', 'شكراً لك | Abaya Collection', ''],
+        'merci' => ['شكراً لكِ! تم استلام طلبكِ', 'شكراً لكِ | Abaya Collection', ''],
     ];
 }
