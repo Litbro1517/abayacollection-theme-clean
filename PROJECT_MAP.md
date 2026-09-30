@@ -2,7 +2,7 @@
 
 > Cartographie complète du thème — **dépôt cible `Litbro1517/abayacollection-theme-clean`** (dépôt propre, relié à l'instance WordPress de production/staging).
 > Créée lors du mandat global unifié « audit & correctif du tunnel de vente REST (Abaya Checkout) ».
-> Dernière mise à jour : **mandat global unifié tunnel checkout — thème v1.8**.
+> Dernière mise à jour : **mandat 4P « ajustement ergonomique du tunnel (alertes attributs) » — thème v1.9**.
 
 ---
 
@@ -15,9 +15,9 @@
 | Site de production | abayacollection.store (nginx + Cloudflare ; plugin LiteSpeed Cache actif côté WP) |
 | Site de staging | dev.abayacollection.store (problème d'environnement 500 réglé par `define('LANDING_PRODUCT_ID', 24)` dans wp-config.php — côté serveur, hors thème) |
 | Dépôt GitHub | `Litbro1517/abayacollection-theme-clean` (cible unique — aucun alignement requis avec les anciens dépôts) |
-| Branche principale | `main` — fusion via branche dédiée ; **feu vert intégré accordé pour le mandat tunnel checkout** |
-| Branche du mandat | `fix/tunnel-checkout-rest` → fusionnée dans `main` |
-| Version du thème | **v1.8 sur `main`** |
+| Branche principale | `main` — fusion via branche dédiée ; **feu vert intégré accordé pour les mandats tunnel checkout & 4P** |
+| Branche du mandat | `fix/tunnel-checkout-rest` (v1.8) puis `fix/tunnel-attribute-ergonomics` (v1.9) → fusionnées dans `main` |
+| Version du thème | **v1.9 sur `main`** |
 | Text domain | `abaya-canvas` |
 
 ## 2. Nomenclature officielle des couleurs (8)
@@ -44,14 +44,15 @@
 │   ├── site-footer.php           # Logo footer + colonnes de liens
 │   └── legal-header.php          # En-tête des pages légales
 ├── assets/
-│   ├── css/styles.css            # FEUILLE UNIQUE (~50 Ko) : tout le site + @font-face locaux + .attribute-error (v1.8)
+│   ├── css/styles.css            # FEUILLE UNIQUE (~50 Ko) : tout le site + @font-face locaux + ciblage erreur par bloc .attribute-error-box / .choice-error (v1.9)
 │   ├── css/critical.css          # CSS critique inline (~18 Ko) — above-the-fold
 │   ├── fonts/                    # Cairo-arabic/latin/latin-ext, DMSans-latin/latin-ext (woff2 variables)
 │   ├── js/app.js                 # Script front (type="module") : galerie, couleurs, tailles, bundles,
 │   │                             #   formulaire → REST, avis → REST, modales.
 │   │                             #   (v1.8 : state couleur/taille null par défaut, validation obligatoire,
 │   │                             #   grille tarifaire lue dans window.LANDING.catalog, redirection
-│   │                             #   /merci/?order=ID&key=KEY)
+│   │                             #   /merci/?order=ID&key=KEY ; v1.9 : erreurs attributs ciblées
+│   │                             #   par bloc — setChoiceError/flagChoiceError — plus de message global)
 │   └── images/                   # logo-header-color.svg, logo-footer-white.svg
 ├── uploads/                      # Images produit (webp 1170×1560) + favicon
 │   └── thumbs/                   # 8 miniatures WebP ~170px (2-4 Ko chacune)
@@ -104,7 +105,8 @@ Séquence de traitement (chaque étape peut rejeter) :
 
 ## 7. Flux de données
 
-1. **Commande** : app.js (state null par défaut) → validation couleur/taille obligatoire + `#attribute-error` + scroll → POST JSON `/create-order` → séquence §5 → Pixel Purchase (eventID serveur, value = prix pack réel) → redirection `/merci/?order=ID&key=KEY`.
+1. **Commande** : app.js (state null par défaut) → validation couleur/taille obligatoire → **ciblage visuel par bloc (v1.9)** : chaque groupe manquant reçoit `.attribute-error-box` (contour rouge 2px via `outline` — zéro décalage de mise en page), micro-secousse `@keyframes abaya-shake` (neutralisée `prefers-reduced-motion`) relancée à chaque tentative via reflow, et micro-texte discret `.choice-error` (style `.field-error`, `role="alert"`) directement au-dessus du bloc — nettoyé dès la sélection de l'attribut (les deux blocs peuvent être signalés ensemble si aucun choix ; défilement vers le premier manquant, couleur prioritaire) → POST JSON `/create-order` → séquence §5 → Pixel Purchase (eventID serveur, value = prix pack réel) → redirection `/merci/?order=ID&key=KEY`.
+   - **Ancrage DOM (v1.9)** : `fieldset.choice-group[data-attribute="color|size"]` + slots `<small class="field-error choice-error" data-choice-error="color|size">` rendus par front-page.php ; l'ancien `<p id="attribute-error">` au-dessus du bouton est supprimé du gabarit et de app.js.
 2. **Avis** : app.js → POST `/submit-review` → commentaire en attente → rendu serveur des approuvés.
 3. **Visuels** : vignettes thumbs/ pour l'affichage ; `data-src` pleine taille pour le swap couleur sur #main-photo ; les URLs viennent du catalogue (visuel أحمر داكن conservé avec `?v=` cache-busting). L'image LCP (#main-photo, بيج) reste intouchée.
 
@@ -123,20 +125,21 @@ Séquence de traitement (chaque étape peut rejeter) :
 
 | Version | Mandat | Contenu |
 |---|---|---|
-| 1.6 | État d'origine (production) | Commit initial `36309e2` « initialisation du nouveau dossier propre » ; breve tentative de correctif 500 (`4ec8efd`, merge `3ef63f4`) **annulée par mandat de conformité** (revert `23d9418`) — le 500 staging étant réglé par wp-config.php |
+| **1.9** | **Mandat 4P — ajustement ergonomique du tunnel (alertes attributs)** | Suppression du message global volumineux `#attribute-error` au-dessus du bouton (gabarit + app.js + styles) ; remplacement par un ciblage par bloc : `fieldset[data-attribute]` encadré par `.attribute-error-box` (contour rouge 2px `#e53e3e` via `outline`, zéro décalage layout) + micro-secousse `abaya-shake` (relancée par reflow à chaque soumission, neutralisée `prefers-reduced-motion`) + micro-texte `.choice-error` (style identique `.field-error`, 10px `#a14f43`, `role="alert"`) au-dessus du bloc, effacé dès la sélection ; signalement indépendant des deux blocs (remplissage partiel géré) (branche `fix/tunnel-attribute-ergonomics`) |
 | **1.8** | **Mandat global unifié tunnel checkout REST** | P0-1 `abaya_catalog()` (8 couleurs dont `أحمر داكن`, 5 tailles, bundles 299/499/699) + injection `window.LANDING.catalog` ; P0-2 handler REST (whitelist 422, prix pack sur la ligne, Item Meta اللون/المقاس, note, order_key) ; P0-3 suppression des défauts بيج/M + validation couleur/taille obligatoire + `#attribute-error` + scroll ; P1-1 `page-merci.php` dynamique sécurisé (order_key, 48 h, frise, WhatsApp, nocache, no-referrer) ; P1-2 idempotence `_abaya_event_id` 10 min ; P2 CF-Connecting-IP + COD conservé (branche `fix/tunnel-checkout-rest`) |
+| 1.6 | État d'origine (production) | Commit initial `36309e2` « initialisation du nouveau dossier propre » ; breve tentative de correctif 500 (`4ec8efd`, merge `3ef63f4`) **annulée par mandat de conformité** (revert `23d9418`) — le 500 staging étant réglé par wp-config.php |
 
 ## 10. État performance
 
 | Axe | État |
 |---|---|
-| Image LCP | `fetchpriority="high"` + preload priorité 1 — **intouché par v1.8** (aucune ressource ajoutée au head de la landing) |
+| Image LCP | `fetchpriority="high"` + preload priorité 1 — **intouché par v1.8 et v1.9** (aucune ressource ajoutée au head de la landing) |
 | Vignettes / polices / CSS critique | inchangés |
-| v1.8 | 0 requête ajoutée sur la landing ; page-merci.php = CSS inline spécifique (page séparée, sans impact PSI landing) |
+| v1.8 / v1.9 | 0 requête ajoutée sur la landing ; v1.9 = styles CSS existants + JS, aucun poids réseau nouveau ; page-merci.php = CSS inline spécifique (page séparée, sans impact PSI landing) |
 
 ## 11. Règles de contribution
 
 1. **Jamais de commit direct sur `main`** — branche dédiée (`feat/…`, `fix/…`).
-2. Fusion vers `main` sur feu vert (dérogation : feu vert intégré accordé au mandat tunnel checkout).
+2. Fusion vers `main` sur feu vert (dérogation : feu vert intégré accordé aux mandats tunnel checkout et 4P).
 3. Mettre à jour ce PROJECT MAP à la fin de chaque mission.
 4. **Conformité mandat** : aucun changement de code pour tout problème relevant de la configuration d'environnement (wp-config.php), d'un identifiant de produit ou d'un réglage de staging — diagnostic + recommandation seulement.
