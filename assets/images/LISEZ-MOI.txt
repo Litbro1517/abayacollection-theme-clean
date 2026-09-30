@@ -1,0 +1,1 @@
+Déposez ici logo-header-color.svg et logo-footer-white.svg (dossier assets/images/ de votre projet).
