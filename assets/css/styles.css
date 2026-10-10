@@ -562,6 +562,11 @@ h1 {
 .review-star.is-empty { fill: #d6d1c7; }
 .review-card-score { color: var(--muted); font: 600 12px/1 "DM Sans", "Cairo", sans-serif; }
 .review-card-comment { margin: 0; color: var(--ink); font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
+.review-card-reply { margin-top: 14px; margin-right: 14px; padding: 12px 14px; background: #faf8f4; border-right: 3px solid var(--olive); border-radius: 8px; }
+.review-card-reply-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.review-card-reply-logo { width: 18px; height: 18px; flex: 0 0 auto; }
+.review-card-reply-title { color: var(--olive-dark, #4a3f2a); font-weight: 700; font-size: 13px; font-family: "Cairo", "DM Sans", sans-serif; }
+.review-card-reply-text { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
 .social-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; max-width: 900px; margin: 0 auto; }
 .social-grid img { width: 100%; height: clamp(240px, 32vw, 390px); object-fit: cover; object-position: center 30%; background: #ece8df; }
 

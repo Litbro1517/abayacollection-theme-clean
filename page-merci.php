@@ -46,6 +46,10 @@ add_action('wp_head', function () {
 .merci-wa:hover { filter: brightness(.95); }
 .merci-ref { color: #8a8378; font-size: .85rem; margin: 14px 0 0; }
 .merci-home { display: inline-block; margin-top: 14px; color: #792f3c; font-weight: 700; }
+.merci-promo { margin: 22px auto 0; padding: 16px 18px; background: #faf8f4; border: 1px dashed #c49b55; border-radius: 12px; text-align: center; }
+.merci-promo-eyebrow { color: #5c554a; font-size: .85rem; font-weight: 700; margin: 0 0 8px; }
+.merci-promo-code { display: inline-block; font-family: 'DM Sans', 'Cairo', sans-serif; font-size: 1.25rem; font-weight: 800; color: #792f3c; letter-spacing: .5px; padding: 8px 14px; background: #fff; border-radius: 8px; word-break: break-all; }
+.merci-promo-desc { color: #5c554a; font-size: .88rem; margin: 8px 0 0; line-height: 1.6; }
 @media (max-width: 480px) {
   .merci-recap { flex-direction: column; align-items: center; }
   .merci-photo { width: 140px; }
@@ -105,6 +109,19 @@ if ($abaya_order) {
 
     $abaya_wa_text = rawurlencode('مرحباً، أود متابعة طلبي رقم #' . $abaya_order->get_order_number());
     $abaya_wa_link = 'https://wa.me/' . $abaya_wa_number . '?text=' . $abaya_wa_text;
+
+    /* Code promo de premier achat (mandat 4P) : -20 DH par abaya sur la prochaine commande.
+     * Format strict sans espace : {PRENOM}-{VILLE}-{NUMERO} ou {VILLE}-{NUMERO} si prénom absent. */
+    $abaya_promo_prenom = preg_replace('/\s+/u', '', trim((string) $abaya_first));
+    $abaya_promo_ville  = preg_replace('/\s+/u', '', trim((string) $abaya_city));
+    $abaya_promo_num    = (string) $abaya_order->get_order_number();
+    if ($abaya_promo_prenom !== '' && $abaya_promo_ville !== '') {
+        $abaya_promo_code = $abaya_promo_prenom . '-' . $abaya_promo_ville . '-' . $abaya_promo_num;
+    } elseif ($abaya_promo_ville !== '') {
+        $abaya_promo_code = $abaya_promo_ville . '-' . $abaya_promo_num;
+    } else {
+        $abaya_promo_code = $abaya_promo_num; // repli minimal (ville absente — cas très rare)
+    }
 }
 
 get_header();
@@ -135,6 +152,11 @@ get_header();
       <li><span class="merci-step-dot" aria-hidden="true">3</span><div><h2>الشحن والدفع عند الاستلام</h2><p>التوصيل خلال 24 إلى 72 ساعة عموماً (طلب الخياطة من 5 إلى 6 أيام). تفحصين العباية قبل الدفع.</p></div></li>
     </ol>
 
+    <div class="merci-promo" aria-labelledby="merci-promo-title">
+      <p class="merci-promo-eyebrow" id="merci-promo-title">🎁 كود خصم خاص بكِ للطلب القادم</p>
+      <code class="merci-promo-code" dir="ltr"><?php echo esc_html($abaya_promo_code); ?></code>
+      <p class="merci-promo-desc">خصم 20 درهم على كل عباية في طلبك القادم. الكود صالح لمرة واحدة عند استعماله في صفحة الدفع.</p>
+    </div>
     <a class="merci-wa" href="<?php echo esc_url($abaya_wa_link); ?>" target="_blank" rel="noopener">متابعة الطلب عبر الواتساب</a>
     <p class="merci-ref">رقم الطلب: <strong>#<?php echo esc_html($abaya_order->get_order_number()); ?></strong></p>
     <a class="merci-home" href="<?php echo esc_url(home_url('/')); ?>">العودة إلى المتجر</a>

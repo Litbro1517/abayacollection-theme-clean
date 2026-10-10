@@ -429,7 +429,10 @@ function abaya_reviews_target_post_id() {
     return 0;
 }
 
-/** Rendu serveur d'une carte d'avis — structure DOM identique à celle construite par app.js (.review-card). */
+/** Rendu serveur d'une carte d'avis — structure DOM identique à celle construite par app.js (.review-card).
+ *  Inclut désormais les réponses validées de la boutique (commentaires enfants approuvés)
+ *  sous chaque avis client, avec un en-tête amical « تقدير متبادل من فريق Abaya Collection »
+ *  et le favicon de la boutique, le tout avec une indentation visuelle (RTL). */
 function abaya_render_review_card($comment) {
     $rating = (int) get_comment_meta($comment->comment_ID, 'rating', true);
     if ($rating < 1 || $rating > 5) return;
@@ -443,6 +446,28 @@ function abaya_render_review_card($comment) {
     echo '<span class="review-card-score">' . esc_html($rating) . '/5</span>';
     echo '</div>';
     echo '<p class="review-card-comment">' . esc_html(get_comment_text($comment)) . '</p>';
+
+    /* Réponses de la boutique : commentaires enfants approuvés (modération admin WordPress).
+     * Récupérés sans filtre de type — l'admin peut répondre en type 'comment' ou 'review'.
+     * En-tête amical + favicon boutique + texte, dans un bloc indenté (RTL → marge à droite). */
+    $abaya_replies = get_comments([
+        'parent' => (int) $comment->comment_ID,
+        'status' => 'approve',
+        'order'  => 'ASC',
+    ]);
+    if (!empty($abaya_replies)) {
+        $abaya_favicon = esc_url(get_template_directory_uri() . '/uploads/favicon-officiel.svg');
+        foreach ($abaya_replies as $abaya_reply) {
+            echo '<div class="review-card-reply">';
+            echo '<div class="review-card-reply-header">';
+            echo '<img class="review-card-reply-logo" src="' . $abaya_favicon . '" alt="" width="18" height="18" loading="lazy" decoding="async" aria-hidden="true" />';
+            echo '<span class="review-card-reply-title">تقدير متبادل من فريق Abaya Collection</span>';
+            echo '</div>';
+            echo '<p class="review-card-reply-text">' . esc_html(get_comment_text($abaya_reply)) . '</p>';
+            echo '</div>';
+        }
+    }
+
     echo '</article>';
 }
 
