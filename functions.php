@@ -178,9 +178,12 @@ add_action('wp_head', function () {
 
 add_action('wp_head', function () {
     $base    = get_template_directory_uri();
-    $favicon = 'favicon-officiel.svg'; // seul favicon du dépôt — l'ancien chemin favicon.svg, absent, produisait un 404 sur les pages légales
+    /* Mandat 4PLP v1.20 : favicon migré SVG+base64 (53 Ko) -> PNG 32x32 + 48x48 (~2.2 Ko).
+     * Apple touch icon utilise le 48x48 ; le 32x32 sert au favicon classique. */
     ?>
-<link rel="icon" href="<?php echo esc_url($base . '/uploads/' . $favicon); ?>" type="image/svg+xml" />
+<link rel="icon" href="<?php echo esc_url($base . '/uploads/favicon-32.png'); ?>" type="image/png" sizes="32x32" />
+<link rel="icon" href="<?php echo esc_url($base . '/uploads/favicon-48.png'); ?>" type="image/png" sizes="48x48" />
+<link rel="apple-touch-icon" href="<?php echo esc_url($base . '/uploads/favicon-48.png'); ?>" />
 <?php
     /* CSS critique inline (header + hero + galerie + prix + @font-face variables)
      * puis styles.css en asynchrone : le premier rendu n'attend plus les 39 Ko de CSS.
@@ -500,7 +503,7 @@ function abaya_render_review_card($comment) {
         'order'  => 'ASC',
     ]);
     if (!empty($abaya_replies)) {
-        $abaya_favicon = esc_url(get_template_directory_uri() . '/uploads/favicon-officiel.svg');
+        $abaya_favicon = esc_url(get_template_directory_uri() . '/uploads/favicon-48.png');
         foreach ($abaya_replies as $abaya_reply) {
             echo '<div class="review-card-reply">';
             echo '<div class="review-card-reply-header">';
