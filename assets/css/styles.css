@@ -551,8 +551,8 @@ h1 {
 .social-section .section-heading { margin-bottom: 27px; }
 .review-button { display: block; width: fit-content; margin-right: auto; padding: 12px 23px; border: 0; background: var(--olive); color: #fff; font: inherit; font-size: 13px; text-decoration: none; transition: background .18s ease; cursor: pointer; }
 .review-button:hover { background: var(--olive-hover); }
-.reviews-list-container { display: grid; gap: 12px; width: min(720px, 100%); margin: 24px auto 0; }
-.review-feedback { width: min(720px, 100%); margin: 18px auto 0; color: var(--olive-dark); font-size: 14px; font-weight: 700; }
+.reviews-list-container { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; width: min(1100px, 100%); margin: 24px auto 0; align-items: start; }
+.review-feedback { width: min(1100px, 100%); margin: 18px auto 0; color: var(--olive-dark); font-size: 14px; font-weight: 700; }
 .review-feedback[hidden] { display: none; }
 .review-feedback.is-error { color: #a63a3a; }
 .review-card { padding: 17px 19px; border: 1px solid var(--line); border-right: 3px solid #792f3c; background: #fff; text-align: right; }
@@ -700,6 +700,13 @@ h1 {
 .policy-footer a { color: var(--muted); font-size: 12px; }
 .policy-footer a:hover { color: var(--olive-dark); text-decoration: underline; text-underline-offset: 3px; }
 .policy-copyright { margin-top: 18px; color: #908f87; font-size: 10px; }
+
+/* Mandat 4P LP (fix/reviews-grid-layout) : sur tablette/mobile, la grille 3 colonnes
+ * des avis revient à 1 colonne (100% largeur) pour une lisibilité parfaite. Les cartes
+ * sont trop étroites en dessous de 768px pour rester alignées en ligne. */
+@media (max-width: 768px) {
+  .reviews-list-container { grid-template-columns: 1fr; gap: 12px; }
+}
 
 @media (max-width: 800px) {
   .wrap { width: min(100% - 38px, 560px); }
