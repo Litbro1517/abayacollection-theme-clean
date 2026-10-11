@@ -5,7 +5,7 @@ $u = esc_url(get_template_directory_uri());
       <div class="footer-inner wrap">
         <div class="footer-logo-wrapper">
           <a class="footer-wordmark" href="/" aria-label="Accueil Abaya Collection">
-            <img src="<?= $u ?>/assets/images/logo-footer-white.png" alt="Abaya Collection" class="footer-logo-svg" width="138" height="104" loading="lazy" decoding="async" />
+            <img src="<?= $u ?>/assets/images/logo-footer-white.svg" alt="Abaya Collection" class="footer-logo-svg" loading="lazy" decoding="async" />
           </a>
         </div>
         <nav class="footer-columns" aria-label="روابط المتجر">

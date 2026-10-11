@@ -159,7 +159,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
       <section class="visual-section visual-section-colors wrap" aria-labelledby="visual-colors-title">
         <div class="visual-row image-left">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp?v=<?= $visuel_ver ?>" width="1170" height="1560" alt="العباية باللون الأحمر الداكن بقصة واسعة مناسبة للخروج والعمل" loading="lazy" decoding="async" />
+            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp?v=<?= $visuel_ver ?>" alt="العباية باللون الأحمر الداكن بقصة واسعة مناسبة للخروج والعمل" loading="lazy" />
           </figure>
           <div class="visual-copy color-copy">
             <h2 class="visual-title" id="visual-colors-title">لماذا هذه العباية هي الخيار المثالي؟</h2>
@@ -188,7 +188,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
       <section class="visual-section visual-section-specs wrap" aria-labelledby="product-specs-title">
         <div class="visual-row">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp" width="1170" height="1560" alt="قصة العباية الواسعة وانسياب قماش الكريب" loading="lazy" decoding="async" />
+            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp" alt="قصة العباية الواسعة وانسياب قماش الكريب" loading="lazy" />
           </figure>
           <div class="visual-copy">
             <h2 class="visual-title" id="product-specs-title">معلومات إضافية وتفاصيل عن المنتج:</h2>
@@ -207,7 +207,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
       <section class="visual-section visual-section-inspection wrap" aria-labelledby="inspection-title">
         <div class="visual-row image-left">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp" width="1170" height="1560" alt="إظهار ملمس قماش العباية البنية وجودة خياطتها" loading="lazy" decoding="async" />
+            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp" alt="إظهار ملمس قماش العباية البنية وجودة خياطتها" loading="lazy" />
           </figure>
           <div class="visual-copy">
             <h2 class="visual-title" id="inspection-title">معاينة الطلبية والحق في الفحص</h2>
