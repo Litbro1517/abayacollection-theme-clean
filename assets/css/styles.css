@@ -547,7 +547,7 @@ h1 {
 .form-result { margin-top: 16px; padding: 13px 15px; border: 1px solid #d8dfd0; background: #f0f4ec; color: #46543d; text-align: center; font-size: 12px; line-height: 1.9; }
 .form-result[hidden] { display: none; }
 
-.social-section { padding-block: 82px 88px; }
+.social-section { padding-block: 26px; }
 .social-section .section-heading { margin-bottom: 27px; }
 .review-button { display: block; width: fit-content; margin-right: auto; padding: 12px 23px; border: 0; background: var(--olive); color: #fff; font: inherit; font-size: 13px; text-decoration: none; transition: background .18s ease; cursor: pointer; }
 .review-button:hover { background: var(--olive-hover); }
@@ -751,6 +751,7 @@ h1 {
   .price-row { margin-bottom: 20px; }
   .price { font-size: 28px; }
   .trust-grid { padding-block: 19px; }
+  .social-section { padding-block: 19px; }
   .trust-icon { flex-basis: 32px; width: 32px; height: 32px; }
   .trust-icon svg { width: 18px; height: 18px; }
   .trust-item { padding-inline: 4px; }
@@ -779,7 +780,6 @@ h1 {
   .bundle-card { min-height: 145px; }
   .product-spec-list { font-size: 14px; }
   .contact-section { padding-block: 38px; }
-  .social-section { padding-block: 52px 58px; }
   .social-grid { gap: 8px; }
   .social-grid img { height: clamp(150px, 52vw, 250px); }
   .faq-section { padding-block: 49px 55px; }
