@@ -155,7 +155,7 @@ get_header();
     <div class="merci-promo" aria-labelledby="merci-promo-title">
       <p class="merci-promo-eyebrow" id="merci-promo-title">🎁 كود خصم خاص بكِ للطلب القادم</p>
       <code class="merci-promo-code" dir="ltr"><?php echo esc_html($abaya_promo_code); ?></code>
-      <p class="merci-promo-desc">خصم 20 درهم على كل عباية في طلبك القادم. الكود صالح لمرة واحدة عند استعماله في صفحة الدفع.</p>
+      <p class="merci-promo-desc">خصم 20 درهم على كل عباية في طلبك القادم، أو لأي شخص يشتري باستخدام كودك الشخصي.</p>
     </div>
     <a class="merci-wa" href="<?php echo esc_url($abaya_wa_link); ?>" target="_blank" rel="noopener">متابعة الطلب عبر الواتساب</a>
     <p class="merci-ref">رقم الطلب: <strong>#<?php echo esc_html($abaya_order->get_order_number()); ?></strong></p>
