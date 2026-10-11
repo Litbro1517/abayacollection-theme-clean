@@ -430,21 +430,65 @@ function abaya_reviews_target_post_id() {
 }
 
 /** Rendu serveur d'une carte d'avis — structure DOM identique à celle construite par app.js (.review-card).
- *  Inclut désormais les réponses validées de la boutique (commentaires enfants approuvés)
- *  sous chaque avis client, avec un en-tête amical « تقدير متبادل من فريق Abaya Collection »
- *  et le favicon de la boutique, le tout avec une indentation visuelle (RTL). */
+ *  Inclut les réponses validées de la boutique (commentaires enfants approuvés) sous chaque avis client,
+ *  avec un en-tête amical « تقدير متبادل من فريق Abaya Collection » et le favicon de la boutique.
+ *  Mandat 4P LP (fix/review-form-fields-and-stars) : affichage « name — city » en bordeaux sous les étoiles,
+ *  étoiles dorées volumineuses à sommets arrondis (stroke-linejoin: round + drop-shadow). */
 function abaya_render_review_card($comment) {
     $rating = (int) get_comment_meta($comment->comment_ID, 'rating', true);
     if ($rating < 1 || $rating > 5) return;
+
+    /* Override éphémère ultra-léger pour avis existants sans nom/ville stockés en BDD.
+     * Coût : 1 lookup array par avis rendu (≈ 0 µs). Aucune requête SQL, aucun impact landing.
+     * Pour ajouter un nouvel avis legacy : renseigner le comment_ID et les valeurs.
+     * Une fois la BDD mise à jour manuellement via l'admin WP, l'entrée peut rester (sans effet) ou être retirée. */
+    static $abaya_named_overrides = [
+        // <ID_AVIS_NOHA> => ['name' => 'Noha', 'city' => 'Casa'],
+    ];
+
+    /* Récupération du nom : override → comment_meta reviewer_name → comment_author → repli « عميل ». */
+    $abaya_reviewer_name = '';
+    $abaya_reviewer_city = '';
+    if (isset($abaya_named_overrides[$comment->comment_ID])) {
+        $abaya_reviewer_name = $abaya_named_overrides[$comment->comment_ID]['name'];
+        $abaya_reviewer_city = $abaya_named_overrides[$comment->comment_ID]['city'];
+    }
+    if ($abaya_reviewer_name === '') {
+        $abaya_reviewer_name = (string) get_comment_meta($comment->comment_ID, 'reviewer_name', true);
+    }
+    if ($abaya_reviewer_city === '') {
+        $abaya_reviewer_city = (string) get_comment_meta($comment->comment_ID, 'reviewer_city', true);
+    }
+    if ($abaya_reviewer_name === '' && $comment->comment_author !== '' && $comment->comment_author !== 'عميل') {
+        $abaya_reviewer_name = $comment->comment_author;
+    }
+
     echo '<article class="review-card">';
     echo '<div class="review-card-header">';
     echo '<span class="review-card-stars" aria-label="' . esc_attr($rating) . ' / 5">';
     for ($i = 0; $i < 5; $i++) {
+        /* Étoile dorée volumineuse à sommets arrondis : path identique + stroke + stroke-linejoin: round
+         * + drop-shadow CSS pour l'effet volumineux. Pas de path SVG modifié (compat préservée). */
         echo '<svg class="review-star' . ($i >= $rating ? ' is-empty' : '') . '" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"/></svg>';
     }
     echo '</span>';
     echo '<span class="review-card-score">' . esc_html($rating) . '/5</span>';
     echo '</div>';
+
+    /* Ligne « name — city » en bordeaux (charte Thank You Page) — uniquement si au moins un des deux est présent. */
+    if ($abaya_reviewer_name !== '' || $abaya_reviewer_city !== '') {
+        echo '<p class="review-card-author">';
+        if ($abaya_reviewer_name !== '') {
+            echo '<strong>' . esc_html($abaya_reviewer_name) . '</strong>';
+        }
+        if ($abaya_reviewer_name !== '' && $abaya_reviewer_city !== '') {
+            echo ' — <span class="review-card-city">' . esc_html($abaya_reviewer_city) . '</span>';
+        } elseif ($abaya_reviewer_city !== '') {
+            echo '<span class="review-card-city">' . esc_html($abaya_reviewer_city) . '</span>';
+        }
+        echo '</p>';
+    }
+
     echo '<p class="review-card-comment">' . esc_html(get_comment_text($comment)) . '</p>';
 
     /* Réponses de la boutique : commentaires enfants approuvés (modération admin WordPress).
@@ -666,13 +710,21 @@ function abaya_handle_submit_review(WP_REST_Request $request) {
     }
 
     // 2) Validation du contenu.
-    $rating  = (int) $request->get_param('rating');
-    $comment = trim(sanitize_textarea_field((string) $request->get_param('comment')));
+    $rating        = (int) $request->get_param('rating');
+    $comment       = trim(sanitize_textarea_field((string) $request->get_param('comment')));
+    $reviewer_name = trim(sanitize_text_field((string) $request->get_param('reviewer_name')));
+    $reviewer_city = trim(sanitize_text_field((string) $request->get_param('reviewer_city')));
     if ($rating < 1 || $rating > 5) {
         return new WP_Error('abaya_invalid_field', 'يرجى اختيار عدد النجوم.', ['status' => 422]);
     }
     if (mb_strlen($comment) < 3 || mb_strlen($comment) > 2000) {
         return new WP_Error('abaya_invalid_field', 'يرجى كتابة رأيك في المنتج.', ['status' => 422]);
+    }
+    if (mb_strlen($reviewer_name) < 2 || mb_strlen($reviewer_name) > 50) {
+        return new WP_Error('abaya_invalid_field', 'يرجى إدخال اسمك.', ['status' => 422]);
+    }
+    if (mb_strlen($reviewer_city) < 2 || mb_strlen($reviewer_city) > 50) {
+        return new WP_Error('abaya_invalid_field', 'يرجى اختيار المدينة.', ['status' => 422]);
     }
 
     // 3) Post cible : page d'accueil statique si définie, sinon produit du landing.
@@ -682,15 +734,21 @@ function abaya_handle_submit_review(WP_REST_Request $request) {
     }
 
     // 4) Persistance via le système natif de commentaires : type « review », statut « en attente » (0).
+    //    Mandat 4P LP : le nom de la cliente est stocké dans comment_author (affichage natif WP),
+    //    et la ville en comment_meta « reviewer_city » pour réutilisation côté rendu.
     $comment_id = wp_insert_comment([
         'comment_post_ID'      => $target_id,
-        'comment_author'       => 'عميل',
+        'comment_author'       => $reviewer_name,
         'comment_author_email' => '',
         'comment_author_url'   => '',
         'comment_content'      => $comment,
         'comment_type'         => 'review',
         'comment_approved'     => 0,
-        'comment_meta'         => ['rating' => $rating],
+        'comment_meta'         => [
+            'rating'        => $rating,
+            'reviewer_name' => $reviewer_name,
+            'reviewer_city' => $reviewer_city,
+        ],
     ]);
     if (!$comment_id || is_wp_error($comment_id)) {
         return new WP_Error('abaya_review_failed', 'خطأ في الخدمة. يرجى المحاولة لاحقاً.', ['status' => 500]);

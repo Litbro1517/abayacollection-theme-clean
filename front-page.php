@@ -330,6 +330,16 @@ foreach (get_comments($abaya_reviews_args) as $abaya_review) {
       <button class="modal-close" type="button" aria-label="إغلاق">×</button>
       <h2 id="review-title">إضافة تقييمك</h2>
       <form id="review-form">
+        <div class="review-form-row">
+          <label class="review-field">
+            <span>الاسم</span>
+            <input name="reviewer_name" type="text" autocomplete="name" placeholder="اسمك" required maxlength="50" />
+          </label>
+          <label class="review-field">
+            <span>المدينة</span>
+            <input name="reviewer_city" type="text" autocomplete="address-level2" placeholder="المدينة" required maxlength="50" />
+          </label>
+        </div>
         <label class="review-field">
           <span>تقييمك</span>
           <select id="review-rating" name="rating" required aria-label="عدد النجوم">

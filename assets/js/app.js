@@ -236,9 +236,12 @@ reviewForm.addEventListener("submit", async (event) => {
   }
 
   // Correctif C2 : l'avis est désormais envoyé au serveur (wp_insert_comment, modération) au lieu d'être injecté dans le DOM
+  // Mandat 4P LP (fix/review-form-fields-and-stars) : ajout du nom + ville de la cliente pour affichage "name — city".
   const reviewPayload = {
     rating: Number(reviewForm.elements.rating.value),
     comment: reviewForm.elements.review.value.trim(),
+    reviewer_name: reviewForm.elements.reviewer_name.value.trim(),
+    reviewer_city: reviewForm.elements.reviewer_city.value.trim(),
   };
 
   reviewSubmitButton.disabled = true;

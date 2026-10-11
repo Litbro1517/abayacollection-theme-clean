@@ -555,12 +555,15 @@ h1 {
 .review-feedback { width: min(720px, 100%); margin: 18px auto 0; color: var(--olive-dark); font-size: 14px; font-weight: 700; }
 .review-feedback[hidden] { display: none; }
 .review-feedback.is-error { color: #a63a3a; }
-.review-card { padding: 17px 19px; border: 1px solid var(--line); background: #fff; text-align: right; }
+.review-card { padding: 17px 19px; border: 1px solid var(--line); border-right: 3px solid #792f3c; background: #fff; text-align: right; }
 .review-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.review-card-stars { display: inline-flex; align-items: center; gap: 2px; direction: ltr; }
-.review-star { width: 15px; height: 15px; fill: #c49b55; }
-.review-star.is-empty { fill: #d6d1c7; }
-.review-card-score { color: var(--muted); font: 600 12px/1 "DM Sans", "Cairo", sans-serif; }
+.review-card-stars { display: inline-flex; align-items: center; gap: 3px; direction: ltr; }
+.review-star { width: 22px; height: 22px; fill: #c49b55; stroke: #c49b55; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 1px 1.5px rgba(196, 155, 85, 0.35)); }
+.review-star.is-empty { fill: #e3dccc; stroke: #e3dccc; filter: none; }
+.review-card-score { color: var(--muted); font: 700 13px/1 "DM Sans", "Cairo", sans-serif; }
+.review-card-author { margin: 0 0 8px; color: #792f3c; font-size: 14px; line-height: 1.6; font-family: "Cairo", "DM Sans", sans-serif; }
+.review-card-author strong { font-weight: 700; color: #792f3c; }
+.review-card-city { color: #8a6e75; font-weight: 600; }
 .review-card-comment { margin: 0; color: var(--ink); font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
 .review-card-reply { margin-top: 14px; margin-right: 14px; padding: 12px 14px; background: #faf8f4; border-right: 3px solid var(--olive); border-radius: 8px; }
 .review-card-reply-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -865,9 +868,11 @@ body { font-family: "Cairo", Tahoma, Arial, sans-serif; font-size: 16px; }
 .size-guide-modal { width: min(700px, calc(100% - 32px)); }
 .size-guide-modal .size-table-wrap table { min-width: 480px; }
 .review-modal form { display: grid; gap: 15px; }
+.review-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .review-field { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
 .review-field select,
-.review-field textarea {
+.review-field textarea,
+.review-field input {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -877,6 +882,9 @@ body { font-family: "Cairo", Tahoma, Arial, sans-serif; font-size: 16px; }
   font: inherit;
   font-size: 14px;
 }
+.review-field input:focus,
+.review-field select:focus,
+.review-field textarea:focus { outline: 2px solid #792f3c; outline-offset: -1px; border-color: #792f3c; }
 .review-field textarea { resize: vertical; }
 .review-submit { width: 100%; }
 .review-result { margin: 0; color: var(--olive-dark); font-size: 14px; font-weight: 700; }
@@ -1218,6 +1226,10 @@ body { font-family: "Cairo", Tahoma, Arial, sans-serif; font-size: 16px; }
 }
 @media (max-width: 540px) {
   .product-landing { padding-bottom: calc(65px + env(safe-area-inset-bottom)); }
+  /* Mandat 4P LP : sur très petits écrans, les champs Nom + Ville passent en colonne unique (lisibilité). */
+  .review-form-row { grid-template-columns: 1fr; gap: 12px; }
+  /* Sur mobile, les étoiles volumineuses prennent trop de place horizontalement : légère réduction. */
+  .review-star { width: 19px; height: 19px; }
 }
 
 
