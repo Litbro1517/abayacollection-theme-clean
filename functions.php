@@ -131,12 +131,11 @@ function abaya_catalog() {
         'colors' => [
             'أسود'       => ['hex' => '#292827', 'label' => 'الأسود', 'image' => 'uploads/frame_021.webp', 'thumb' => 'uploads/thumbs/frame_021.webp'],
             'بيج'        => ['hex' => '#d6c5a8', 'label' => 'البيج', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp'],
-            'كاكي'       => ['hex' => '#69765b', 'label' => 'الكاكي', 'image' => 'uploads/frame_007.webp', 'thumb' => 'uploads/thumbs/frame_007.webp', 'out_of_stock' => true],
             'أبيض'       => ['hex' => '#f0eee7', 'label' => 'الأبيض', 'image' => 'uploads/frame_029-2.webp', 'thumb' => 'uploads/thumbs/frame_029-2.webp'],
-            'أزرق داكن'  => ['hex' => '#26384d', 'label' => 'الأزرق الداكن', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp'],
-            'بني'        => ['hex' => '#75594e', 'label' => 'البني', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp'],
-            'وردي ترابي' => ['hex' => '#b58e91', 'label' => 'الوردي الترابي', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___11_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___11_.webp', 'out_of_stock' => true],
-            'أحمر داكن'  => ['hex' => '#792f3c', 'label' => 'الأحمر الداكن', 'image' => 'uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp'],
+            'أزرق داكن'  => ['hex' => '#26384d', 'label' => 'الأزرق الداكن', 'image' => 'uploads/swatch-blue-marine.jpg', 'thumb' => 'uploads/thumbs/swatch-blue-marine.jpg'],
+            'أزرق سماوي' => ['hex' => '#9ec3d4', 'label' => 'الأزرق السماوي', 'image' => 'uploads/visual-blue-sky.jpg', 'thumb' => 'uploads/thumbs/visual-blue-sky.jpg'],
+            'بني'        => ['hex' => '#75594e', 'label' => 'البني', 'image' => 'uploads/hero-moka.jpg', 'thumb' => 'uploads/thumbs/hero-moka.jpg'],
+            'أحمر داكن'  => ['hex' => '#792f3c', 'label' => 'الأحمر الداكن', 'image' => 'uploads/visual-bordeaux.jpg', 'thumb' => 'uploads/thumbs/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp'],
         ],
         'sizes'   => ['S', 'M', 'L', 'XL', 'XXL'],
         /* Grille tarifaire AUTORITAIRE des offres (MAD) — le serveur est la seule
@@ -151,12 +150,10 @@ function abaya_catalog() {
     return $catalog;
 }
 
-/* Image LCP (#main-photo, robe beige) : URL unique partagée entre le preload
- * (wp_head) et la balise <img>, avec cache-busting filemtime identique.
- * Le chemin du fichier est désormais défini dans abaya_catalog() (source unique). */
+/* Image LCP (#main-photo) : visuel Hero Moka/Chocolat (Mandat 4PLP v1.25).
+ * URL unique partagée entre le preload (wp_head) et la balise <img>, cache-busting filemtime. */
 function abaya_lcp_image_src() {
-    $cat = abaya_catalog();
-    $rel = $cat['colors']['بيج']['image'];
+    $rel = 'uploads/hero-moka.jpg';
     $f   = get_template_directory() . '/' . $rel;
     $ver = file_exists($f) ? filemtime($f) : '1';
     return get_template_directory_uri() . '/' . $rel . '?v=' . $ver;

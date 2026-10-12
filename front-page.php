@@ -5,23 +5,13 @@ $u = esc_url(get_template_directory_uri());
 /* P0-1 : rendu PHP alimenté par le catalogue unique du thème.
  * Ordre des couleurs/tailles et grille tarifaire = abaya_catalog() (functions.php). */
 $cat = abaya_catalog();
-
-// Visuel bordeaux de la section « couleurs » : cache-busting automatique.
-// La version = date de modification du fichier : toute mise à jour de l'image
-// change l'URL (?v=...) et force navigateurs / CDN / LiteSpeed à servir
-// la nouvelle version au lieu de l'ancienne en cache.
-$visuel_bordeaux = __DIR__ . '/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp';
-$visuel_ver = 2; // fallback statique si filemtime indisponible
-if (is_file($visuel_bordeaux) && ($mt = filemtime($visuel_bordeaux))) {
-        $visuel_ver = $mt;
-}
 get_header();
 ?>
 <main>
       <section class="hero wrap" aria-labelledby="product-title">
         <div class="gallery">
           <div class="main-photo-wrap product-image-wrapper">
-            <img id="main-photo" class="main-photo" src="<?php echo esc_url(abaya_lcp_image_src()); ?>" width="1170" height="1560" fetchpriority="high" decoding="async" alt="العباية باللون البيج" />
+            <img id="main-photo" class="main-photo" src="<?php echo esc_url(abaya_lcp_image_src()); ?>" width="1170" height="1560" fetchpriority="high" decoding="async" alt="العباية باللون البني الموكا" />
             <span class="photo-tag">اختيار يومي أنيق</span>
             <?php /* v1.10 : overlay « Stock épuisé » — voile fin + badge vitré,
                    basculé par app.js quand la couleur sélectionnée porte le
@@ -33,14 +23,12 @@ get_header();
             <button class="gallery-arrow gallery-next" type="button" aria-label="الصورة التالية">›</button>
           </div>
           <div class="thumbnail-row" aria-label="صور العباية">
-<?php /* Boucle vignettes du catalogue (P0-1). La vignette بيج reste
-       is-current car #main-photo affiche ce visuel (élément LCP, src inchangée). */
+<?php /* Boucle vignettes du catalogue (P0-1). La vignette بني (marron) est
+       is-current au chargement car le visuel Hero Moka/Chocolat correspond à
+       cette teinte — l'utilisateur voit le swatch marron actif par défaut. */
 foreach ($cat['colors'] as $color_name => $color_data) :
-    $is_lcp   = ($color_name === 'بيج');
+    $is_lcp   = ($color_name === 'بني');
     $full_src = $is_lcp ? abaya_lcp_image_src() : $u . '/' . $color_data['image'];
-    if (!$is_lcp && ($color_name === 'أحمر داكن')) {
-        $full_src .= '?v=' . $visuel_ver; // cache-busting visuel bordeaux (inchangé v1.5)
-    }
     $color_alt  = 'العباية باللون ' . $color_data['label'];
     $color_aria = 'عرض اللون ' . $color_data['label'];
 ?>
@@ -53,8 +41,8 @@ foreach ($cat['colors'] as $color_name => $color_data) :
 
         <div class="product-info">
           <p class="eyebrow"><span class="eyebrow-line"></span> ABAYA COLLECTION</p>
-          <h1 id="product-title">عباية خريفية من توب لولان – أنيقة وانسيابية</h1>
-          <p class="product-intro">عباية خريفية أنيقة وانسيابية، بتوب مميز وفينيسيون نقية وخياطة مضوبلة من لداخل ومن برا، بجودة عالية لراحتك في الاستخدام اليومي.</p>
+          <h1 id="product-title">إكتشفي البني لون الموسم<br>توب انسيابي وأناقة هادئة</h1>
+          <p class="product-intro">تصميم راقٍ، توب لولان مريح، وخياطة مزدوجة</p>
 
           <div class="price-row">
             <strong id="current-price" class="price"><?= (int) $cat['bundles'][1] ?> <small>درهم</small></strong>
@@ -159,7 +147,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
       <section class="visual-section visual-section-colors wrap" aria-labelledby="visual-colors-title">
         <div class="visual-row image-left">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___6_.webp?v=<?= $visuel_ver ?>" alt="العباية باللون الأحمر الداكن بقصة واسعة مناسبة للخروج والعمل" loading="lazy" />
+            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___12_.webp" width="1170" height="1560" alt="العباية باللون البيج بجودة عالية مناسبة لجميع الخرجات والعمل" loading="lazy" decoding="async" />
           </figure>
           <div class="visual-copy color-copy">
             <h2 class="visual-title" id="visual-colors-title">لماذا هذه العباية هي الخيار المثالي؟</h2>
@@ -170,7 +158,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
               </li>
               <li class="is-centered">
                 <span class="checkmark-badge" aria-hidden="true">✓</span>
-                <span>متوفرة في 8 ألوان كي تختاري لونك المفضل بكل حرية.</span>
+                <span>متوفرة في 7 ألوان كي تختاري لونك المفضل بكل حرية.</span>
               </li>
               <li>
                 <span class="checkmark-badge" aria-hidden="true">✓</span>
@@ -188,7 +176,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
       <section class="visual-section visual-section-specs wrap" aria-labelledby="product-specs-title">
         <div class="visual-row">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___9_.webp" alt="قصة العباية الواسعة وانسياب قماش الكريب" loading="lazy" />
+            <img src="<?= $u ?>/uploads/visual-bordeaux.jpg" width="1170" height="1560" alt="قصة العباية الواسعة وانسياب قماش الكريب باللون الأحمر الداكن" loading="lazy" decoding="async" />
           </figure>
           <div class="visual-copy">
             <h2 class="visual-title" id="product-specs-title">معلومات إضافية وتفاصيل عن المنتج:</h2>
@@ -207,7 +195,7 @@ foreach ($cat['bundles'] as $bundle_qty => $bundle_price) :
       <section class="visual-section visual-section-inspection wrap" aria-labelledby="inspection-title">
         <div class="visual-row image-left">
           <figure class="visual-media">
-            <img src="<?= $u ?>/uploads/Robe_comfy_Robe_chemise_avec_un_col_officier_et_deux_poche_tr_s_pratique_et_confortable_pour_tt___13_.webp" alt="إظهار ملمس قماش العباية البنية وجودة خياطتها" loading="lazy" />
+            <img src="<?= $u ?>/uploads/visual-blue-sky.jpg" width="1170" height="1560" alt="إظهار ملمس قماش العباية بلون أزرق سماوي وجودة خياطتها" loading="lazy" decoding="async" />
           </figure>
           <div class="visual-copy">
             <h2 class="visual-title" id="inspection-title">معاينة الطلبية والحق في الفحص</h2>
