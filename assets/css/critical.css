@@ -132,8 +132,7 @@ h1{max-width: 480px;
   font-size: clamp(28px, 3vw, 40px);
   line-height: 1.5;
   font-weight: 600;
-  letter-spacing: -.045em;
-  font-family: "Cairo", Tahoma, Arial, sans-serif;}
+  letter-spacing: -.045em;}
 .product-intro{margin-bottom: 17px; color: var(--muted); font-size: 13px; line-height: 1.9;}
 .rating-line{display: flex; align-items: center; gap: 9px; margin-bottom: 19px;}
 .rating-copy{font-size: 11px; font-weight: 700;}
