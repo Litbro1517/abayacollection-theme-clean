@@ -370,7 +370,6 @@ h1 {
   line-height: 1.5;
   font-weight: 600;
   letter-spacing: -.045em;
-  font-family: "Cairo", Tahoma, Arial, sans-serif;
 }
 .product-intro { margin-bottom: 17px; color: var(--muted); font-size: 13px; line-height: 1.9; }
 .price-row { display: flex; align-items: center; gap: 11px; margin-bottom: 24px; direction: rtl; }
