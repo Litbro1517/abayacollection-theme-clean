@@ -41,8 +41,8 @@ foreach ($cat['colors'] as $color_name => $color_data) :
 
         <div class="product-info">
           <p class="eyebrow"><span class="eyebrow-line"></span> ABAYA COLLECTION</p>
-          <h1 id="product-title">إكتشفي البني لون الموسم<br>توب انسيابي وأناقة هادئة</h1>
-          <p class="product-intro">تصميم راقٍ، توب لولان مريح، وخياطة مزدوجة</p>
+          <h1 id="product-title">عباية خريفية من توب لولان – أنيقة وانسيابية</h1>
+          <p class="product-intro">عباية خريفية أنيقة وانسيابية، بتوب مميز وفينيسيون نقية وخياطة مضوبلة من لداخل ومن برا، بجودة عالية لراحتك في الاستخدام اليومي.</p>
 
           <div class="price-row">
             <strong id="current-price" class="price"><?= (int) $cat['bundles'][1] ?> <small>درهم</small></strong>
